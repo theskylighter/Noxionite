@@ -116,7 +116,7 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     const isCurrentTag = currentTag === node.id;
     const isTagHighlighted = state.highlightTags.length > 0 && state.highlightTags.includes(node.id as string);
     ctx.globalAlpha = !hoveredNode || highlightedNodeIds.has(node.id as string) ? 1 : GRAPH_CONFIG.visual.HOVER_OPACITY;
-    const label = node.type === 'Tag' ? `# ${node.name}` : node.name;
+    const label = (node.type === 'Tag' || node.type === 'Hub' || node.type === 'Ambassador' || node.type === 'Leaf') ? `# ${node.name}` : node.name;
 
     const baseSize = 2;
     const scalingFactor = 0.5;
@@ -171,8 +171,8 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     ctx.arc(node.x, node.y, Math.max(fillRadius, 0), 0, 2 * Math.PI);
     ctx.fill();
 
-    // Draw count inside the node for both 'Tag' and 'Root' types
-    if (node.count) {
+    // Draw count inside the node for Ambassador, Hub, and Root types (not Leaf)
+    if (node.count && node.type !== 'Leaf') {
       const maxTextWidth = fillRadius > 0 ? fillRadius * 1.6 : 0;
       const countFontSize = nodeSize * 0.4;
       ctx.font = `${countFontSize}px sans-serif`;

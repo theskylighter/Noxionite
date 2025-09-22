@@ -7,7 +7,7 @@ export interface GraphNode extends NodeObject {
   name: string;
   description?: string;
   slug?: string;
-  type: 'Root' | 'Category' | 'Post' | 'Home' | 'Tag' | 'Database';
+  type: 'Root' | 'Category' | 'Post' | 'Home' | 'Tag' | 'Database' | 'Ambassador' | 'Hub' | 'Leaf';
   imageUrl?: string;
   page?: Partial<PageInfo>;
   tag?: string;
