@@ -92,3 +92,16 @@ Please check the link below for installation instructions.
 # 4. License
 
 MIT © Jaewan Shin
+
+# 5. Known Issues
+
+## 5.1. OG Tags are generated but not reflected on social platforms
+All tags are properly included in the `<head>` section, but social platforms fail to detect them.
+
+## 5.2. Locale detection fails when accessing URLs with empty locale, redirecting to 404 page
+
+## 5.3. Occasional issue where only partial Notion database is fetched when routing through CategoryTree
+This appears to be related to ISR caching.
+
+## 5.4. Social images are not displayed on serverless platforms like Vercel
+This occurs because the system generates image files directly using Puppeteer, which requires a server environment.
