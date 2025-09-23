@@ -106,7 +106,7 @@ export function CategoryPage({ pageProps, isMobile, isDbPage, dbPageInfo }: Cate
     const filteredPosts = posts.filter(post => post.language === locale)
     
     // Sort by published date (newest first)
-    return filteredPosts.sort((a, b) => {
+    return filteredPosts.toSorted((a, b) => {
       if (!a.date && !b.date) return 0
       if (!a.date) return 1
       if (!b.date) return -1

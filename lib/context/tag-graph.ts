@@ -94,13 +94,13 @@ export function buildTagGraphData(siteMap: SiteMap): TagGraphData {
     // Convert Sets to sorted arrays for JSON serialization
     const sortedTagRelationships: Record<string, string[]> = {}
     for (const [tag, relatedTags] of Object.entries(tagRelationships)) {
-      sortedTagRelationships[tag] = Array.from(relatedTags).sort()
+      sortedTagRelationships[tag] = Array.from(relatedTags).toSorted()
     }
 
     // Sort tag pages for consistent ordering
     const sortedTagPages: Record<string, string[]> = {}
     for (const [tag, pages] of Object.entries(tagPages)) {
-      sortedTagPages[tag] = [...new Set(pages)].sort()
+      sortedTagPages[tag] = [...new Set(pages)].toSorted()
     }
 
     localeData[locale] = {
@@ -124,7 +124,7 @@ export function getTopTags(tagGraphData: TagGraphData, locale = localeConfig.def
   if (!localeData) return []
   
   return Object.entries(localeData.tagCounts)
-    .sort(([, countA], [, countB]) => countB - countA)
+    .toSorted(([, countA], [, countB]) => countB - countA)
     .slice(0, limit)
 }
 

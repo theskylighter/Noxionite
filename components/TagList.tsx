@@ -21,7 +21,7 @@ export function TagList() {
     const tagCounts = currentLocaleData?.tagCounts || fallbackLocaleData?.tagCounts || {};
     const tags = Object.keys(tagCounts)
       .filter(tag => tag && tag.trim() !== '') // Filter out empty strings
-      .sort((a, b) => {
+      .toSorted((a, b) => {
         // Sort by count (desc) then by name (asc)
         const countA = tagCounts[a] || 0;
         const countB = tagCounts[b] || 0;

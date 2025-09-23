@@ -97,7 +97,7 @@ function CategoryItem({ item, level, isExpanded, toggleExpanded }: CategoryItemP
 }
 
 function RecursiveCategoryTree({ items, level = 0, expandedItems, toggleItemExpanded }: CategoryTreeProps) {
-  const sortedItems = items?.sort((a, b) => {
+  const sortedItems = items?.toSorted((a, b) => {
     if (a.type === 'Category' && b.type !== 'Category') return -1
     if (a.type !== 'Category' && b.type === 'Category') return 1
     return 0

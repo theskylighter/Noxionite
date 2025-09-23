@@ -204,7 +204,7 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     ctx.fillText(label, node.x, node.y + textYOffset);
     
     ctx.globalAlpha = 1;
-  }, [isDarkMode, currentTag, hoveredNode, state.highlightTags]);
+  }, [isDarkMode, currentTag, hoveredNode, state.highlightTags, highlightedNodeIds]);
 
   const linkCanvasObject = useCallback((link: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const colors = isDarkMode ? GRAPH_COLORS.dark : GRAPH_COLORS.light;
@@ -219,7 +219,7 @@ export const TagGraphView: React.FC<TagGraphViewProps> = ({
     ctx.stroke();
 
     ctx.globalAlpha = 1;
-  }, [isDarkMode, hoveredNode, highlightedLinks, highlightedNodeIds]);
+  }, [isDarkMode, hoveredNode, highlightedLinks]);
 
   useEffect(() => {
     if (!containerRef.current || (width && height)) return;

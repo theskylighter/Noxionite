@@ -130,11 +130,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
 
   React.useEffect(() => {
     if (mounted) {
-      if (isMobile) {
-        document.body.classList.add('mboidle')
-      } else {
-        document.body.classList.remove('mboidle')
-      }
+      document.body.classList.toggle('mboidle', isMobile)
     }
   }, [isMobile, mounted])
 

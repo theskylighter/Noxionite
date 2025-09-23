@@ -226,7 +226,8 @@ export const createPostGraphData = (
 
 // Helper function to calculate node size based on count using logarithmic scale
 const calculateNodeSize = (count: number): number => {
-  return Math.log(count + 1) * 5 + 5;
+  if (count === 1) return 1;
+  else return Math.log(count + 1) * 10 + 5;  
 };
 
 export const createTagGraphData = (
@@ -309,7 +310,7 @@ export const createTagGraphData = (
   const ambassadors = new Set<string>();
   for (const cluster of hubClusters) {
     // Sort: first by -count, then by tag name asc
-    const sorted = cluster.slice().sort((a, b) => {
+    const sorted = cluster.slice().toSorted((a, b) => {
       const countDiff = tagCounts[b] - tagCounts[a];
       if (countDiff !== 0) return countDiff;
       return a.localeCompare(b);
@@ -324,7 +325,7 @@ export const createTagGraphData = (
     const localHubs = validPostTags.filter(t => tagCounts[t] >= 2);
     if (localHubs.length === 0 && validPostTags.length > 0) {
       // all leafs
-      const sortedTags = validPostTags.slice().sort((a, b) => a.localeCompare(b));
+      const sortedTags = validPostTags.slice().toSorted((a, b) => a.localeCompare(b));
       const ambassador = sortedTags[0];
       ambassadors.add(ambassador);
       // connect other leafs to ambassador
@@ -389,7 +390,7 @@ export const createTagGraphData = (
       for (const rel of related) {
         if (!validTags.has(rel)) continue; // Skip invalid related tags
         if (tagCounts[rel] >= 2) {
-          const sorted = [tag, rel].sort();
+          const sorted = [tag, rel].toSorted();
           const key = sorted.join('-');
           if (!linkSet.has(key)) {
             linkSet.add(key);
@@ -413,7 +414,7 @@ export const createTagGraphData = (
     if (localHubs.length > 0) {
       for (const leaf of localLeafs) {
         for (const hub of localHubs) {
-          const sorted = [leaf, hub].sort();
+          const sorted = [leaf, hub].toSorted();
           const key = sorted.join('-');
           if (!linkSet.has(key)) {
             linkSet.add(key);
@@ -431,7 +432,7 @@ export const createTagGraphData = (
 
   // Isolated leaf links
   for (const link of isolatedLeafLinks) {
-    const sorted = [link.source, link.target].sort();
+    const sorted = [link.source, link.target].toSorted();
     const key = sorted.join('-');
     if (!linkSet.has(key)) {
       linkSet.add(key);
@@ -446,7 +447,7 @@ export const createTagGraphData = (
 
   // Root to ambassadors
   for (const amb of ambassadors) {
-    const sorted = [ALL_TAGS_NODE_ID, amb].sort();
+    const sorted = [ALL_TAGS_NODE_ID, amb].toSorted();
     const key = sorted.join('-');
     if (!linkSet.has(key)) {
       linkSet.add(key);
