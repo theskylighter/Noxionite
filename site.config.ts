@@ -3,8 +3,6 @@ import locale from './site.locale.json'
 
 export default siteConfig({
   notionDbIds: [
-    '25bf2d475c31811ca2b6c73fc83f40c7',
-    '22cf2d475c3181a4ac12ddd8a652603c',
     '251f2d475c3181c3a9f2ff6f477bbf25',
     '21df2d475c31812dae49d1b1735e02b4'
   ],
@@ -16,6 +14,10 @@ export default siteConfig({
 
   // open graph metadata (optional)
   description: 'Your Notion pages, reborn as a stunning blog',
+
+  // DNS record for domain verification (optional)
+  // Replace with your actual Google Search Console verification code
+  dnsRecord: '_QZy3wmjCIgdXI6R_HH1kRLcZJR5OkAUDRj3NiMGKxs', 
 
   // hero section (optional)
   heroAssets: [

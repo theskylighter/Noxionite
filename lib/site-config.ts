@@ -11,6 +11,7 @@ export interface SiteConfig {
   authors?: Array<{ name: string; avatar_dir: string; home_url: string }>
   description?: string
   language?: string
+  dnsRecord?: string
   locale: {
     localeList: string[]
     defaultLocale: string

@@ -63,6 +63,10 @@ export function PageHead({
       <meta name='robots' content='index,follow' />
       <meta property='og:type' content='website' />
 
+      {config.dnsRecord && (
+        <meta name='google-site-verification' content={config.dnsRecord} />
+      )}
+
       {site && (
         <>
           <meta property='og:site_name' content={site.name} />

@@ -49,6 +49,7 @@ export const name: string = getRequiredSiteConfig('name')
 export const author: string = getRequiredSiteConfig('author')
 export const domain: string = getRequiredSiteConfig('domain')
 export const description: string = getSiteConfig('description', 'Notion Blog')
+export const dnsRecord: string = getSiteConfig('dnsRecord', '')
 
 export const language: string = getSiteConfig('language', locale.defaultLocale)
 
