@@ -35,6 +35,7 @@ import { Noto_Sans_KR } from 'next/font/google'
 import { appWithTranslation, useTranslation } from 'next-i18next'
 import { getBlockTitle } from 'notion-utils'
 import { PageHead } from '@/components/PageHead'
+import { Analytics } from '@vercel/analytics/next'
 import localeConfig from '../site.locale.json'
 
 const SHOW_DEBUG_CONTROLS = false
@@ -363,6 +364,7 @@ function App({ Component, pageProps }: AppProps<types.PageProps>) {
           </main>
 
           <Footer isMobile={isMobile} />
+          <Analytics />
         </div>
       </div>
     </AppContext.Provider>
