@@ -229,193 +229,6 @@ const calculateNodeSize = (count: number): number => {
   return Math.log(count + 1) * 5 + 5;
 };
 
-// Helper function to get node color based on role
-const getNodeColor = (role: 'ambassador' | 'hub' | 'leaf'): string => {
-  switch (role) {
-    case 'ambassador':
-      return '#8B5CF6'; // Purple for ambassador
-    case 'hub':
-      return '#10B981'; // Green for hub
-    case 'leaf':
-      return '#6B7280'; // Gray for leaf
-    default:
-      return '#10B981';
-  }
-};
-
-// Analyze tags within each post to classify as hub or leaf
-interface PostTagAnalysis {
-  postTagRoles: Record<string, Record<string, 'hub' | 'leaf'>>; // postId -> tag -> role
-  leafToHubMap: Record<string, string[]>; // leaf tag -> hub/ambassador tags it's connected to
-  hubConnections: Array<{source: string, target: string}>; // hub-to-hub connections within posts
-  tagRoles: Record<string, 'hub' | 'leaf'>; // global tag role based on post-level analysis
-}
-
-const analyzePostLevelTags = (
-  tagGraphData: LocaleTagGraphData,
-  locale: string
-): PostTagAnalysis => {
-  const postTagRoles: Record<string, Record<string, 'hub' | 'leaf'>> = {};
-  const leafToHubMap: Record<string, string[]> = {};
-  const hubConnections: Array<{source: string, target: string}> = [];
-  const tagRoles: Record<string, 'hub' | 'leaf'> = {};
-
-  // Process each post's tags
-  Object.entries(tagGraphData.tagPages || {}).forEach(([tag, pageIds]) => {
-    pageIds.forEach(pageId => {
-      if (!postTagRoles[pageId]) {
-        postTagRoles[pageId] = {};
-      }
-      
-      // Count tag occurrences within this post
-      const pageTags = Object.keys(tagGraphData.tagPages).filter(t => 
-        tagGraphData.tagPages[t].includes(pageId)
-      );
-      
-      const tagCountsInPost: Record<string, number> = {};
-      pageTags.forEach(t => {
-        tagCountsInPost[t] = (tagCountsInPost[t] || 0) + 1;
-      });
-      
-      // Classify tags in this post
-      const maxCount = Math.max(...Object.values(tagCountsInPost));
-      
-      pageTags.forEach(t => {
-        const count = tagCountsInPost[t];
-        if (count >= 2) {
-          postTagRoles[pageId][t] = 'hub';
-          tagRoles[t] = 'hub';
-        } else if (count === 1) {
-          postTagRoles[pageId][t] = 'leaf';
-          // Only set to leaf if not already classified as hub in another post
-          if (!tagRoles[t]) {
-            tagRoles[t] = 'leaf';
-          }
-        }
-      });
-      
-      // Handle case where all tags appear only once - pick first alphabetically as hub
-      const allLeaf = Object.values(tagCountsInPost).every(count => count === 1);
-      if (allLeaf && pageTags.length > 0) {
-        const firstAlphabetical = pageTags.sort()[0];
-        postTagRoles[pageId][firstAlphabetical] = 'hub';
-        tagRoles[firstAlphabetical] = 'hub';
-      }
-    });
-  });
-
-  // Build leaf-to-hub connections and hub-to-hub connections
-  Object.entries(postTagRoles).forEach(([pageId, roles]) => {
-    const hubs = Object.entries(roles)
-      .filter(([, role]) => role === 'hub')
-      .map(([tag]) => tag);
-    const leaves = Object.entries(roles)
-      .filter(([, role]) => role === 'leaf')
-      .map(([tag]) => tag);
-    
-    // Connect leaves to hubs
-    leaves.forEach(leaf => {
-      if (!leafToHubMap[leaf]) {
-        leafToHubMap[leaf] = [];
-      }
-      hubs.forEach(hub => {
-        if (!leafToHubMap[leaf].includes(hub)) {
-          leafToHubMap[leaf].push(hub);
-        }
-      });
-    });
-    
-    // Connect hubs to each other (all pairs)
-    for (let i = 0; i < hubs.length; i++) {
-      for (let j = i + 1; j < hubs.length; j++) {
-        const connection = {
-          source: hubs[i],
-          target: hubs[j]
-        };
-        // Avoid duplicate connections
-        if (!hubConnections.some(conn => 
-          (conn.source === connection.source && conn.target === connection.target) ||
-          (conn.source === connection.target && conn.target === connection.source)
-        )) {
-          hubConnections.push(connection);
-        }
-      }
-    }
-  });
-
-  return { postTagRoles, leafToHubMap, hubConnections, tagRoles };
-};
-
-// Determine global tag roles (ambassador/hub/leaf)
-const determineTagRoles = (
-  tagCounts: Record<string, number>,
-  postAnalysis: PostTagAnalysis
-): Record<string, 'ambassador' | 'hub' | 'leaf'> => {
-  const roles: Record<string, 'ambassador' | 'hub' | 'leaf'> = {};
-  
-  // First, set base roles from post analysis
-  Object.entries(postAnalysis.tagRoles).forEach(([tag, role]) => {
-    roles[tag] = role === 'hub' ? 'hub' : 'leaf';
-  });
-  
-  // Group hub nodes into clusters based on co-occurrence
-  const hubClusters: string[][] = [];
-  const processedHubs = new Set<string>();
-  
-  const hubNodes = Object.keys(roles).filter(tag => roles[tag] === 'hub');
-  
-  hubNodes.forEach(hub => {
-    if (processedHubs.has(hub)) return;
-    
-    // Find all hubs connected to this one
-    const cluster = [hub];
-    processedHubs.add(hub);
-    
-    const findConnectedHubs = (currentHub: string) => {
-      postAnalysis.hubConnections.forEach(({ source, target }) => {
-        const connectedHub = source === currentHub ? target : 
-                           target === currentHub ? source : null;
-        
-        if (connectedHub && !processedHubs.has(connectedHub) && roles[connectedHub] === 'hub') {
-          cluster.push(connectedHub);
-          processedHubs.add(connectedHub);
-          findConnectedHubs(connectedHub);
-        }
-      });
-    };
-    
-    findConnectedHubs(hub);
-    hubClusters.push(cluster);
-  });
-  
-  // Select ambassador nodes from each cluster
-  hubClusters.forEach(cluster => {
-    if (cluster.length === 1) {
-      // Single hub in cluster becomes ambassador
-      roles[cluster[0]] = 'ambassador';
-    } else {
-      // Multiple hubs: select ambassador based on frequency, then alphabetical
-      const clusterWithCounts = cluster.map(tag => ({
-        tag,
-        count: tagCounts[tag] || 0
-      }));
-      
-      const maxCount = Math.max(...clusterWithCounts.map(c => c.count));
-      const candidates = clusterWithCounts.filter(c => c.count === maxCount);
-      
-      if (candidates.length === 1) {
-        roles[candidates[0].tag] = 'ambassador';
-      } else {
-        // Tie-breaker: alphabetical order
-        const sorted = candidates.sort((a, b) => a.tag.localeCompare(b.tag));
-        roles[sorted[0].tag] = 'ambassador';
-      }
-    }
-  });
-  
-  return roles;
-};
-
 export const createTagGraphData = (
   tagGraphData: LocaleTagGraphData | undefined,
   t: (key: string) => string,
@@ -426,16 +239,97 @@ export const createTagGraphData = (
   const nodes: GraphNode[] = [];
   const links: GraphLink[] = [];
 
-  // Filter out empty tags before processing
-  const validTagCounts = Object.fromEntries(
-    Object.entries(tagGraphData.tagCounts || {}).filter(([tag]) => tag !== '')
-  );
-  const tagCounts = validTagCounts;
-  const totalTags = Object.keys(tagCounts).length;
+  const tagCounts = tagGraphData.tagCounts || {};
+  const tagRelationships = tagGraphData.tagRelationships || {};
+  const tagPages = tagGraphData.tagPages || {};
 
-  // Create the 'All Tags' node (Root)
+  // Build postTags: Map<string, string[]> postId to tags
+  const postTags = new Map<string, string[]>();
+  for (const [tag, pages] of Object.entries(tagPages)) {
+    for (const post of pages) {
+      if (!postTags.has(post)) {
+        postTags.set(post, []);
+      }
+      postTags.get(post)!.push(tag);
+    }
+  }
+
+  // Identify hubs and leafs
+  const allTags = Object.keys(tagCounts);
+  const hubs = allTags.filter(tag => tagCounts[tag] >= 2);
+  // const leafs = allTags.filter(tag => tagCounts[tag] === 1); // leafs are handled inline
+
+  // Build hub adjacency list
+  const hubAdj = new Map<string, Set<string>>();
+  for (const hub of hubs) {
+    hubAdj.set(hub, new Set());
+  }
+  for (const [tag, related] of Object.entries(tagRelationships)) {
+    if (hubs.includes(tag)) {
+      for (const rel of related) {
+        if (hubs.includes(rel)) {
+          hubAdj.get(tag)!.add(rel);
+          hubAdj.get(rel)!.add(tag); // ensure undirected
+        }
+      }
+    }
+  }
+
+  // Find connected components for hubs
+  const visited = new Set<string>();
+  const hubClusters: string[][] = [];
+  for (const hub of hubs) {
+    if (!visited.has(hub)) {
+      const component: string[] = [];
+      const stack = [hub];
+      visited.add(hub);
+      while (stack.length > 0) {
+        const current = stack.pop()!;
+        component.push(current);
+        for (const neighbor of hubAdj.get(current) || []) {
+          if (!visited.has(neighbor)) {
+            visited.add(neighbor);
+            stack.push(neighbor);
+          }
+        }
+      }
+      hubClusters.push(component);
+    }
+  }
+
+  // Select ambassadors for each hub cluster
+  const ambassadors = new Set<string>();
+  for (const cluster of hubClusters) {
+    // Sort: first by -count, then by tag name asc
+    const sorted = cluster.slice().sort((a, b) => {
+      const countDiff = tagCounts[b] - tagCounts[a];
+      if (countDiff !== 0) return countDiff;
+      return a.localeCompare(b);
+    });
+    ambassadors.add(sorted[0]);
+  }
+
+  // Now handle isolated leaf groups
+  const isolatedLeafLinks: {source: string, target: string}[] = [];
+  for (const [_post, tags] of postTags) {
+    const localHubs = tags.filter(t => tagCounts[t] >= 2);
+    if (localHubs.length === 0 && tags.length > 0) {
+      // all leafs
+      const sortedTags = tags.slice().sort((a, b) => a.localeCompare(b));
+      const ambassador = sortedTags[0];
+      ambassadors.add(ambassador);
+      // connect other leafs to ambassador
+      for (const leaf of sortedTags.slice(1)) {
+        isolatedLeafLinks.push({source: ambassador, target: leaf});
+      }
+    }
+  }
+
+  // Now create nodes
+  // Root node
+  const totalTags = allTags.length;
   const allTagsNodeName = t('allTags');
-  const allTagsNode: GraphNode = {
+  const rootNode: GraphNode = {
     id: ALL_TAGS_NODE_ID,
     name: allTagsNodeName,
     type: 'Root' as any,
@@ -444,98 +338,114 @@ export const createTagGraphData = (
     val: calculateNodeSize(totalTags),
     count: totalTags,
   };
-  nodes.push(allTagsNode);
+  nodes.push(rootNode);
 
-  // Step 1: Analyze tags within each post to classify as hub or leaf
-  const postTagAnalysis = analyzePostLevelTags(tagGraphData, locale);
-  
-  // Step 2: Determine global tag roles (ambassador/hub/leaf)
-  const tagRoles = determineTagRoles(tagCounts, postTagAnalysis);
-  
-  // Step 3: Create nodes based on roles
-  const ambassadorNodes: GraphNode[] = [];
-  const hubNodes: GraphNode[] = [];
-  const leafNodes: GraphNode[] = [];
-
-  Object.entries(tagCounts).forEach(([tag, count]) => {
-    const role = tagRoles[tag];
-    const baseNode = {
+  // Tag nodes
+  for (const tag of allTags) {
+    const count = tagCounts[tag];
+    const isLeaf = count === 1 && !ambassadors.has(tag);
+    const isAmbassador = ambassadors.has(tag);
+    const isHub = count >= 2 && !isAmbassador;
+    let type = 'Tag';
+    let color = '#10B981';
+    if (isAmbassador) {
+      type = 'Ambassador';
+      color = '#059669';
+    } else if (isHub) {
+      type = 'Hub';
+      color = '#34D399';
+    } else if (isLeaf) {
+      type = 'Leaf';
+      color = '#6EE7B7';
+      }
+    const node: GraphNode = {
       id: tag,
       name: tag,
       url: `/${locale}/tag/${encodeURIComponent(tag)}`,
-      color: getNodeColor(role),
+      type: type as any,
+      color,
       val: calculateNodeSize(count),
+      count: isLeaf ? undefined : count,
     };
+    nodes.push(node);
+  }
 
-    switch (role) {
-      case 'ambassador':
-        ambassadorNodes.push({
-          ...baseNode,
-          type: 'Ambassador' as any,
-          count: count,
-        });
-        break;
-      case 'hub':
-        hubNodes.push({
-          ...baseNode,
-          type: 'Hub' as any,
-          count: count,
-        });
-        break;
-      case 'leaf':
-        leafNodes.push({
-          ...baseNode,
-          type: 'Leaf' as any,
-          // Leaf nodes don't show frequency count
-        });
-        break;
+  // Now add links
+  const linkSet = new Set<string>();
+
+  // Hub-hub links
+  for (const [tag, related] of Object.entries(tagRelationships)) {
+    if (tagCounts[tag] >= 2) {
+      for (const rel of related) {
+        if (tagCounts[rel] >= 2) {
+          const sorted = [tag, rel].sort();
+          const key = sorted.join('-');
+          if (!linkSet.has(key)) {
+            linkSet.add(key);
+            links.push({
+              source: sorted[0],
+              target: sorted[1],
+              color: '#9CA3AF',
+              width: 1,
+            });
+          }
+        }
+      }
     }
-  });
+  }
 
-  // Add all nodes to the final array
-  nodes.push(...ambassadorNodes, ...hubNodes, ...leafNodes);
+  // Leaf to hub links (for posts with hubs)
+  for (const [_post, tags] of postTags) {
+    const localHubs = tags.filter(t => tagCounts[t] >= 2);
+    const localLeafs = tags.filter(t => tagCounts[t] === 1 && !ambassadors.has(t));
+    if (localHubs.length > 0) {
+      for (const leaf of localLeafs) {
+        for (const hub of localHubs) {
+          const sorted = [leaf, hub].sort();
+          const key = sorted.join('-');
+          if (!linkSet.has(key)) {
+            linkSet.add(key);
+            links.push({
+              source: sorted[0],
+              target: sorted[1],
+              color: '#D1D5DB',
+              width: 0.5,
+            });
+          }
+        }
+      }
+    }
+  }
 
-  // Step 4: Create connections based on the new rules
-  const validNodeIds = new Set(nodes.map(n => n.id));
-  
-  // Connect ambassador nodes to root
-  ambassadorNodes.forEach(node => {
-    if (validNodeIds.has(ALL_TAGS_NODE_ID) && validNodeIds.has(node.id)) {
+  // Isolated leaf links
+  for (const link of isolatedLeafLinks) {
+    const sorted = [link.source, link.target].sort();
+    const key = sorted.join('-');
+    if (!linkSet.has(key)) {
+      linkSet.add(key);
+      links.push({
+        source: sorted[0],
+        target: sorted[1],
+        color: '#D1D5DB',
+        width: 0.5,
+      });
+    }
+  }
+
+  // Root to ambassadors
+  for (const amb of ambassadors) {
+    const sorted = [ALL_TAGS_NODE_ID, amb].sort();
+    const key = sorted.join('-');
+    if (!linkSet.has(key)) {
+      linkSet.add(key);
       links.push({
         source: ALL_TAGS_NODE_ID,
-        target: node.id,
+        target: amb,
         color: '#D1D5DB',
-        width: 2,
+        width: 0.5,
       });
     }
-  });
-
-  // Connect leaf nodes to their hub/ambassador nodes
-  leafNodes.forEach(leafNode => {
-    const parentTags = postTagAnalysis.leafToHubMap[leafNode.id] || [];
-    parentTags.forEach(parentTag => {
-      if (validNodeIds.has(parentTag) && validNodeIds.has(leafNode.id)) {
-        links.push({
-          source: parentTag,
-          target: leafNode.id,
-          color: '#E5E7EB',
-          width: 1,
-        });
-      }
-    });
-  });
-
-  // Connect hub nodes to each other within posts
-  postTagAnalysis.hubConnections.forEach(({ source, target }) => {
-    if (validNodeIds.has(source) && validNodeIds.has(target)) {
-      links.push({
-        source,
-        target,
-        color: '#9CA3AF',
-        width: 1.5,
-      });
-    }
-  });
+  }
 
   return { nodes, links };
 };
