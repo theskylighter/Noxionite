@@ -243,9 +243,15 @@ export const createTagGraphData = (
   const tagRelationships = tagGraphData.tagRelationships || {};
   const tagPages = tagGraphData.tagPages || {};
 
+  // Filter out empty or whitespace-only tags
+  const validTags = new Set(
+    Object.keys(tagCounts).filter(tag => tag && tag.trim().length > 0)
+  );
+
   // Build postTags: Map<string, string[]> postId to tags
   const postTags = new Map<string, string[]>();
   for (const [tag, pages] of Object.entries(tagPages)) {
+    if (!validTags.has(tag)) continue; // Skip invalid tags
     for (const post of pages) {
       if (!postTags.has(post)) {
         postTags.set(post, []);
@@ -255,7 +261,7 @@ export const createTagGraphData = (
   }
 
   // Identify hubs and leafs
-  const allTags = Object.keys(tagCounts);
+  const allTags = Array.from(validTags);
   const hubs = allTags.filter(tag => tagCounts[tag] >= 2);
   // const leafs = allTags.filter(tag => tagCounts[tag] === 1); // leafs are handled inline
 
@@ -265,8 +271,10 @@ export const createTagGraphData = (
     hubAdj.set(hub, new Set());
   }
   for (const [tag, related] of Object.entries(tagRelationships)) {
+    if (!validTags.has(tag)) continue; // Skip invalid tags
     if (hubs.includes(tag)) {
       for (const rel of related) {
+        if (!validTags.has(rel)) continue; // Skip invalid related tags
         if (hubs.includes(rel)) {
           hubAdj.get(tag)!.add(rel);
           hubAdj.get(rel)!.add(tag); // ensure undirected
@@ -312,10 +320,11 @@ export const createTagGraphData = (
   // Now handle isolated leaf groups
   const isolatedLeafLinks: {source: string, target: string}[] = [];
   for (const [_post, tags] of postTags) {
-    const localHubs = tags.filter(t => tagCounts[t] >= 2);
-    if (localHubs.length === 0 && tags.length > 0) {
+    const validPostTags = tags.filter(t => validTags.has(t)); // Filter invalid tags
+    const localHubs = validPostTags.filter(t => tagCounts[t] >= 2);
+    if (localHubs.length === 0 && validPostTags.length > 0) {
       // all leafs
-      const sortedTags = tags.slice().sort((a, b) => a.localeCompare(b));
+      const sortedTags = validPostTags.slice().sort((a, b) => a.localeCompare(b));
       const ambassador = sortedTags[0];
       ambassadors.add(ambassador);
       // connect other leafs to ambassador
@@ -375,8 +384,10 @@ export const createTagGraphData = (
 
   // Hub-hub links
   for (const [tag, related] of Object.entries(tagRelationships)) {
+    if (!validTags.has(tag)) continue; // Skip invalid tags
     if (tagCounts[tag] >= 2) {
       for (const rel of related) {
+        if (!validTags.has(rel)) continue; // Skip invalid related tags
         if (tagCounts[rel] >= 2) {
           const sorted = [tag, rel].sort();
           const key = sorted.join('-');
@@ -396,8 +407,9 @@ export const createTagGraphData = (
 
   // Leaf to hub links (for posts with hubs)
   for (const [_post, tags] of postTags) {
-    const localHubs = tags.filter(t => tagCounts[t] >= 2);
-    const localLeafs = tags.filter(t => tagCounts[t] === 1 && !ambassadors.has(t));
+    const validPostTags = tags.filter(t => validTags.has(t)); // Filter invalid tags
+    const localHubs = validPostTags.filter(t => tagCounts[t] >= 2);
+    const localLeafs = validPostTags.filter(t => tagCounts[t] === 1 && !ambassadors.has(t));
     if (localHubs.length > 0) {
       for (const leaf of localLeafs) {
         for (const hub of localHubs) {

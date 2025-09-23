@@ -3,6 +3,8 @@ import locale from './site.locale.json'
 
 export default siteConfig({
   notionDbIds: [
+    '25bf2d475c31811ca2b6c73fc83f40c7',
+    '22cf2d475c3181a4ac12ddd8a652603c',
     '251f2d475c3181c3a9f2ff6f477bbf25',
     '21df2d475c31812dae49d1b1735e02b4'
   ],
