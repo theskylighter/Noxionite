@@ -23,7 +23,7 @@ export default siteConfig({
   heroAssets: [
     {
       type: 'video',
-      src: '/hero-assets/noxionite-shiny-short.mov',
+      src: 'https://pub-95020314d8e64caea687d48c69c6cd9b.r2.dev/noxionite-shiny-short.mov',
       url: 'https://noxionite.vercel.app/',
       content: {
         en: {
@@ -38,7 +38,7 @@ export default siteConfig({
     },
     {
       type: 'video',
-      src: '/hero-assets/notion-compatible.mp4',
+      src: 'https://pub-95020314d8e64caea687d48c69c6cd9b.r2.dev/notion-compatible.mp4',
       url: 'https://noxionite.vercel.app/post/features-notion',
       content: {
         en: {
@@ -53,7 +53,7 @@ export default siteConfig({
     },
     {
       type: 'video',
-      src: '/hero-assets/super-fast-routing.mp4',
+      src: 'https://pub-95020314d8e64caea687d48c69c6cd9b.r2.dev/super-fast-routing.mp4',
       content: {
         en: {
           title: '2. Lightning-Fast Routing',
@@ -67,7 +67,7 @@ export default siteConfig({
     },
     {
       type: 'video',
-      src: '/hero-assets/unlimited-nested-category.mp4',
+      src: 'https://pub-95020314d8e64caea687d48c69c6cd9b.r2.dev/unlimited-nested-category.mp4',
       url: 'https://noxionite.vercel.app/post/fetures-folder-category',
       content: {
         en: {
@@ -82,7 +82,7 @@ export default siteConfig({
     },
     {
       type: 'video',
-      src: '/hero-assets/graph-view.mp4',
+      src: 'https://pub-95020314d8e64caea687d48c69c6cd9b.r2.dev/graph-view.mp4',
       url: 'https://noxionite.vercel.app/post/features-graph-view',
       content: {
         en: {
@@ -97,7 +97,7 @@ export default siteConfig({
     },
     {
       type: 'video',
-      src: '/hero-assets/glassmorphism.mp4',
+      src: 'https://pub-95020314d8e64caea687d48c69c6cd9b.r2.dev/glassmorphism.mp4',
       url: 'https://noxionite.vercel.app/post/fetures-glassmorphism',
       content: {
         en: {
@@ -112,7 +112,7 @@ export default siteConfig({
     },
     {
       type: 'video',
-      src: '/hero-assets/multi-language.mp4',
+      src: 'https://pub-95020314d8e64caea687d48c69c6cd9b.r2.dev/multi-language.mp4',
       url: 'https://noxionite.vercel.app/post/fetures-multilanguage',
       content: {
         en: {
@@ -127,7 +127,7 @@ export default siteConfig({
     },
     {
       type: 'video',
-      src: '/hero-assets/noxionite-shiny-reverse.mov',
+      src: 'https://pub-95020314d8e64caea687d48c69c6cd9b.r2.dev/noxionite-shiny-reverse.mov',
       content: {
         en: {
           title: '7. Fully Open Source',
@@ -169,6 +169,6 @@ export default siteConfig({
 
   // Incremental Static Regeneration (ISR) configuration
   isr: {
-    revalidate: 60 // revalidate time in seconds
+    revalidate: 3600 // revalidate time in seconds
   }
 })
