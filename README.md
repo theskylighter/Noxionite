@@ -89,7 +89,7 @@ Please check the link below for installation instructions.
 
 [https://noxionite.vercel.app/en/post/setup](https://noxionite.vercel.app/post/setup)
 
-[If the above link does not work, see this page.](https://www.notion.so/alemem64/Getting-Started-259f2d475c318068a84bfa73776fcda7#259f2d475c318154bd2ff516513e8a2c)
+[If the above link does not work, see this page.]([https://www.notion.so/alemem64/Getting-Started-259f2d475c318068a84bfa73776fcda7#259f2d475c318154bd2ff516513e8a2c](https://alemem64.notion.site/Getting-Started-259f2d475c318068a84bfa73776fcda7?source=copy_link))
 
 
 # 4. License
