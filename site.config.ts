@@ -4,13 +4,18 @@ import locale from './site.locale.json'
 export default siteConfig({
   notionDbIds: [
     '251f2d475c3181c3a9f2ff6f477bbf25',
-    '21df2d475c31812dae49d1b1735e02b4'
+    '21df2d475c31812dae49d1b1735e02b4',
+    '2dc52a9c5a3d81498a98ea2490971a3a',
   ],
 
   // basic site info (required)
-  name: 'Noxionite',
-  domain: 'noxionite.vercel.app',
-  author: 'Jaewan Shin',
+  // name: 'Noxionite',
+  // domain: 'noxionite.vercel.app',
+  // author: 'Jaewan Shin',
+// 
+    name: 'Name',
+  domain: 'name.vercel.app',
+  author: 'Shivam Singh',
 
   // open graph metadata (optional)
   description: 'Your Notion pages, reborn as a stunning blog',
@@ -139,12 +144,26 @@ export default siteConfig({
         }
       }
     },
-  ],
+    {
 
+      type: 'image',
+      src : "https://pub-ec3d5b72fe75490386588eef1665bf75.r2.dev/stats.png",
+      content: {
+        en: {
+          title: 'DSA question Statistics',
+          description: 'overview of most asked DSA topics and their frequency'
+        },
+        ko: {
+          title: 'DSA 질문 통계',
+          description: '가장 많이 묻는 DSA 주제와 그 빈도의 개요'
+        }
+      }
+    },
+  ],
   // author metadata (optional)
   authors: [
     {
-      name: 'Jaewan Shin',                       // Author name
+      name: 'Shivam Singh',                       // Author name
       avatar_dir: '/authors/Jzahnny.jpeg',   // Author avatar image path in public folder (28px x 28px recommended)
       home_url: 'https://jzahnny.vercel.app/',   // Author home URL
     }
